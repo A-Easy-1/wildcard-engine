@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Estero Cup - The Wildcard Engine</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b132b; color: #fff; text-align: center; padding: 16px; margin: 0; }
+  .card { background: #1c2541; border-radius: 20px; padding: 20px; max-width: 500px; margin: 0 auto; box-shadow: 0 12px 30px rgba(0,0,0,0.6); border: 1px solid #3a506b; }
+  h1 { color: #5bc0be; font-size: 22px; margin: 0 0 2px 0; text-transform: uppercase; letter-spacing: 1px; }
+  .nickname { color: #ffd166; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .subtitle { color: #94a3b8; font-size: 12px; margin-bottom: 14px; line-height: 1.4; }
+  
+  .bio-box { background: #0b132b; border-radius: 12px; padding: 12px; border: 1px dashed #3a506b; margin-bottom: 16px; text-align: left; font-size: 12px; color: #cbd5e1; line-height: 1.5; }
+  .bio-title { color: #5bc0be; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+
+  label { font-size: 11px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; text-align: left; }
+  select, input { width: 100%; padding: 10px; border-radius: 10px; background: #0b132b; color: #5bc0be; border: 1px solid #3a506b; font-size: 14px; font-weight: bold; margin-bottom: 16px; outline: none; box-sizing: border-box; }
+  
+  .slot-row { display: flex; align-items: center; justify-content: space-between; background: #0b132b; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; border: 1px solid #3a506b; }
+  .slot-label { font-size: 13px; font-weight: 600; text-align: left; color: #e2e8f0; flex-grow: 1; padding-right: 8px; }
+  .spin-btn-sm { background: #3a506b; color: #6fffe9; border: none; padding: 8px 14px; font-size: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; flex-shrink: 0; }
+  .spin-btn-sm:hover { background: #5bc0be; color: #0b132b; }
+
+  .master-btn { background: linear-gradient(135deg, #6fffe9, #5bc0be); color: #0b132b; border: none; padding: 16px; font-size: 16px; font-weight: 900; border-radius: 12px; cursor: pointer; width: 100%; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 4px 15px rgba(91,192,190,0.3); margin-top: 6px; }
+  .master-btn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; }
+  
+  .result-box { display: none; margin-top: 20px; padding: 18px; background: #0b132b; border-radius: 14px; border: 1px solid #5bc0be; text-align: left; }
+  .rank-badge { font-size: 24px; font-weight: 900; color: #ffd166; margin: 6px 0 12px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+  .story-title { font-size: 13px; font-weight: bold; color: #5bc0be; margin-top: 10px; text-transform: uppercase; }
+  .story-body { font-size: 13px; color: #cbd5e1; line-height: 1.5; margin-top: 4px; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .stat-card { background: #1c2541; padding: 8px 10px; border-radius: 8px; border: 1px solid #3a506b; font-size: 12px; }
+  .stat-card span { display: block; color: #ffd166; font-weight: bold; font-size: 12px; margin-top: 2px; }
+  
+  .card-gen-sec { margin-top: 24px; padding-top: 18px; border-top: 2px dashed #3a506b; text-align: left; }
+  .course-header { font-size: 15px; font-weight: 900; color: #5bc0be; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; text-align: center; }
+  .score-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px; text-align: center; }
+  .score-table th, .score-table td { border: 1px solid #3a506b; padding: 5px 2px; }
+  .score-table th { background: #1c2541; color: #5bc0be; }
+  .stroke-dot { color: #ffd166; font-weight: bold; }
+  .highlight-hole { background: rgba(91, 192, 190, 0.15); }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>REX "THE WILDCARD" HARPER</h1>
+  <div class="nickname">10 Handicap • Tour Sauce Legend</div>
+  <div class="subtitle">The Estero Cup Match Play Persona Engine</div>
+
+  <div class="bio-box">
+    <div class="bio-title">👤 Scouting Report</div>
+    Dripped out in exclusive club logos and tour-issue gear. Rex carries two putters in his bag (one blade, one mallet) depending on vibes and green speeds. A pure 10-handicap that swings between appearing to be a stripe-show stick who can somehow shoot 74 with ease... or fire a 102 when his lethal two-way miss takes over.
+  </div>
+
+  <label for="roundSelect">Select Trip Round</label>
+  <select id="roundSelect">
+    <option value="Hammock Bay">Round 1: Hammock Bay (Net Best Ball)</option>
+    <option value="The Rookery">Round 2: The Rookery (Net Best Ball)</option>
+    <option value="The Park">Round 3: The Park (Net Best Ball)</option>
+    <option value="Saltleaf Preserve">Round 5: Saltleaf Preserve (Singles Match)</option>
+    <option value="Tiburon Black">Round 7: Tiburón Black (Singles Match)</option>
+  </select>
+
+  <!-- Step-by-Step Interactive Wheels -->
+  <div class="slot-row">
+    <div class="slot-label" id="sleepLabel"><strong>Rest:</strong> Tap Spin</div>
+    <button class="spin-btn-sm" onclick="spinFactor('sleep')">SPIN</button>
+  </div>
+
+  <div class="slot-row">
+    <div class="slot-label" id="vibeLabel"><strong>Vibes:</strong> Tap Spin</div>
+    <button class="spin-btn-sm" onclick="spinFactor('vibe')">SPIN</button>
+  </div>
+
+  <div class="slot-row">
+    <div class="slot-label" id="drinkLabel"><strong>Drinks:</strong> Tap Spin</div>
+    <button class="spin-btn-sm" onclick="spinFactor('drink')">SPIN</button>
+  </div>
+
+  <button class="master-btn" id="outcomeBtn" onclick="generateOutcome()" disabled>REVEAL REX'S ROUND OUTCOME</button>
+
+  <div class="result-box" id="result">
+    <div style="font-size: 11px; font-weight: bold; color: #94a3b8; letter-spacing: 1px;">FINAL TARGET FINISH</div>
+    <div class="rank-badge" id="rank-text">RANK #4 OVERALL</div>
+    
+    <div class="story-title">📖 Match Narrative & Report</div>
+    <div class="story-body" id="backstory-text"></div>
+
+    <div class="stat-grid">
+      <div class="stat-card">💥 Magic Moment:<span id="magic-text"></span></div>
+      <div class="stat-card">⚠️ Blow-Up Hole:<span id="blowup-text"></span></div>
+    </div>
+  </div>
+
+  <!-- Scorecard Generator Section -->
+  <div class="card-gen-sec" id="scorecardSec" style="display:none;">
+    <div class="story-title" style="font-size:15px; color:#ffd166;">📝 Generate Rex's Scorecard</div>
+    <p style="font-size:12px; color:#cbd5e1; margin: 4px 0 12px 0;">Enter Rex's Target Net Score based on the rest of the field's results. The scorecard will automatically route stroke allocation, par ratings, magic moments, and blow-up holes.</p>
+
+    <label for="targetNetInput">Target Net Score</label>
+    <input type="number" id="targetNetInput" placeholder="e.g. 74" />
+
+    <button class="master-btn" style="padding:12px; font-size:14px;" onclick="buildScorecard()">GENERATE HOLE-BY-HOLE CARD</button>
+
+    <div id="cardOutput" style="display:none; margin-top:16px;"></div>
+  </div>
+</div>
+
+<script>
+const courseData = {
+  "Hammock Bay": { par: [4,5,4,3,4,4,5,3,4, 4,4,3,5,4,4,3,5,4], hc: [7,15,3,11,1,13,5,17,9, 8,12,18,6,14,2,16,4,10] },
+  "The Rookery": { par: [4,5,4,3,4,4,3,5,4, 4,4,5,3,4,4,3,5,4], hc: [9,15,5,17,1,11,13,3,7, 10,6,14,18,2,12,16,4,8] },
+  "The Park": { par: [4,4,5,3,4,4,3,5,4, 4,3,5,4,4,3,4,5,4], hc: [9,7,1,15,3,11,17,5,13, 8,18,4,10,2,16,14,6,12] },
+  "Saltleaf Preserve": { par: [4,5,3,4,4,5,3,4,4, 4,3,5,4,4,3,4,5,4], hc: [11,3,17,5,1,9,15,13,7, 8,18,4,10,2,16,14,6,12] },
+  "Tiburon Black": { par: [4,5,4,3,4,4,5,3,4, 4,4,3,5,4,3,5,4,4], hc: [9,13,3,17,1,7,11,15,5, 10,8,16,2,12,18,6,14,4] }
+};
+
+const factors = {
+  sleep: [
+    { text: "8 Hours (Fully Rested)", score: 2 },
+    { text: "5 Hours (Tossing & Turning)", score: 1 },
+    { text: "3 Hours (Heavy Regret)", score: 0 }
+  ],
+  vibe: [
+    { text: "Dialed & Dangerous", score: 2 },
+    { text: "Chaotic Good", score: 1 },
+    { text: "Severe Agitation", score: 0 }
+  ],
+  drink: [
+    { text: "Zero (Strictly Electrolytes)", score: 2 },
+    { text: "2 Transfusions Deep by Hole 3", score: 1 },
+    { text: "Double Digits & Loud", score: 0 }
+  ]
+};
+
+let currentScores = { sleep: null, vibe: null, drink: null };
+let activeOutcome = null;
+
+function spinFactor(type) {
+  let label = document.getElementById(type + "Label");
+  let options = factors[type];
+  let prefix = type === 'sleep' ? 'Rest' : type === 'vibe' ? 'Vibes' : 'Drinks';
+  let icon = type === 'sleep' ? '😴' : type === 'vibe' ? '✨' : '🍹';
+  
+  let count = 0;
+  let interval = setInterval(() => {
+    let temp = options[Math.floor(Math.random() * options.length)];
+    label.innerHTML = `<strong>${prefix}:</strong> ${icon} ${temp.text}`;
+    count++;
+    if(count > 10) {
+      clearInterval(interval);
+      let finalChoice = options[Math.floor(Math.random() * options.length)];
+      label.innerHTML = `<strong>${prefix}:</strong> ${icon} ${finalChoice.text}`;
+      currentScores[type] = finalChoice.score;
+      checkReady();
+    }
+  }, 60);
+}
+
+function checkReady() {
+  if(currentScores.sleep !== null && currentScores.vibe !== null && currentScores.drink !== null) {
+    document.getElementById("outcomeBtn").disabled = false;
+  }
+}
+
+const rankNarratives = {
+  1: {
+    title: "1st Place (JACKPOT 🌟)",
+    desc: "Rex pulled out the blade putter on the 1st green and didn't miss a single putt under 15 feet. Twirling clubs on every iron shot and painting pure cuts off the tee. He matches the BEST net score of the day!",
+    magic: "Hole 14 Birdie", magicHole: 14, magicVal: -1,
+    blowup: "None (Clean Card)", blowHole: null, blowVal: 0
+  },
+  2: {
+    title: "2nd Place",
+    desc: "Rex's tour-sauce energy is at an all-time high. Striking the ball like a low-handicap stick and only taking one minor penalty drop all day.",
+    magic: "Hole 8 Birdie", magicHole: 8, magicVal: -1,
+    blowup: "Hole 11 Bogey", blowHole: 11, blowVal: 1
+  },
+  3: {
+    title: "3rd Place",
+    desc: "Solid, gritty performance. Rex switched to his mallet putter on the back nine to lock down clutch net pars under pressure.",
+    magic: "Hole 6 Par Save", magicHole: 6, magicVal: 0,
+    blowup: "Hole 15 Bogey", blowHole: 15, blowVal: 1
+  },
+  4: {
+    title: "4th Place (Median)",
+    desc: "The true 10-handicap experience. Flashing world-class iron play on one hole, then slicing a driver into the palm trees on the next.",
+    magic: "Hole 2 Clutch Par", magicHole: 2, magicVal: 0,
+    blowup: "Hole 9 Double Bogey", blowHole: 9, blowVal: 2
+  },
+  5: {
+    title: "5th Place",
+    desc: "The two-way miss reared its ugly head on the front nine. Rex spent half the round muttering about his shaft flex, but managed to grind out a decent card.",
+    magic: "Hole 1 Bomb Drive Par", magicHole: 1, magicVal: 0,
+    blowup: "Hole 12 Triple Bogey", blowHole: 12, blowVal: 3
+  },
+  6: {
+    title: "6th Place",
+    desc: "High chaos golf. Rex is playing at lightning speed, snapping tees in half after bad drives, and relying heavily on handicap strokes.",
+    magic: "Hole 7 Eagle", magicHole: 7, magicVal: -2,
+    blowup: "Hole 16 Quadruple Bogey", blowHole: 16, blowVal: 4
+  },
+  7: {
+    title: "7th Place",
+    desc: "The driver completely betrayed him today. Swapped putters three separate times on the back nine trying to find a rhythm.",
+    magic: "Hole 4 Miracle Punch Par", magicHole: 4, magicVal: 0,
+    blowup: "Hole 13 Snowman 8", blowHole: 13, blowVal: 4
+  },
+  8: {
+    title: "8th Place (BUST 💀)",
+    desc: "Total meltdown. The two-way miss turned into a full-blown shank. Rex threw his mallet putter into the bush and took the worst net score of the field!",
+    magic: "Hole 18 Flagstick Par", magicHole: 18, magicVal: 0,
+    blowup: "Hole 5 Quintuple Bogey", blowHole: 5, blowVal: 5
+  }
+};
+
+function generateOutcome() {
+  let totalScore = currentScores.sleep + currentScores.vibe + currentScores.drink;
+  let targetRank;
+  let luck = Math.random();
+
+  if (totalScore === 6) targetRank = luck < 0.7 ? 1 : 2;
+  else if (totalScore >= 4) targetRank = luck < 0.4 ? 2 : luck < 0.8 ? 3 : 4;
+  else if (totalScore >= 2) targetRank = luck < 0.3 ? 4 : luck < 0.7 ? 5 : 6;
+  else if (totalScore === 1) targetRank = luck < 0.5 ? 6 : 7;
+  else targetRank = luck < 0.7 ? 8 : 7;
+
+  activeOutcome = rankNarratives[targetRank];
+
+  document.getElementById("result").style.display = "block";
+  document.getElementById("rank-text").innerText = activeOutcome.title;
+  document.getElementById("backstory-text").innerText = activeOutcome.desc;
+  document.getElementById("magic-text").innerText = activeOutcome.magic;
+  document.getElementById("blowup-text").innerText = activeOutcome.blowup;
+  
+  document.getElementById("scorecardSec").style.display = "block";
+}
+
+function buildScorecard() {
+  let netInput = parseInt(document.getElementById("targetNetInput").value);
+  if (isNaN(netInput)) {
+    alert("Please enter a valid target Net Score!");
+    return;
+  }
+
+  let courseKey = document.getElementById("roundSelect").value;
+  let course = courseData[courseKey];
+  let totalPar = course.par.reduce((a,b)=>a+b, 0);
+  
+  // Rex is a 10 HC: Gets 1 stroke on HDCP holes 1 through 10
+  let strokeHoles = course.hc.map(h => h <= 10 ? 1 : 0);
+  let targetGross = netInput + 10;
+  
+  // Base gross relative to par
+  let grossDiffOverPar = targetGross - totalPar;
+  
+  // Initialize hole gross scores at Par
+  let grossScores = [...course.par];
+  let remainingDiff = grossDiffOverPar;
+
+  // Apply Magic Hole score
+  if (activeOutcome.magicHole) {
+    let idx = activeOutcome.magicHole - 1;
+    grossScores[idx] = course.par[idx] + activeOutcome.magicVal;
+    remainingDiff -= activeOutcome.magicVal;
+  }
+
+  // Apply Blow-Up Hole score
+  if (activeOutcome.blowHole) {
+    let idx = activeOutcome.blowHole - 1;
+    grossScores[idx] = course.par[idx] + activeOutcome.blowVal;
+    remainingDiff -= activeOutcome.blowVal;
+  }
+
+  // Distribute remaining strokes across non-locked holes
+  let availableHoles = [];
+  for (let i = 0; i < 18; i++) {
+    if ((i + 1) !== activeOutcome.magicHole && (i + 1) !== activeOutcome.blowHole) {
+      availableHoles.push(i);
+    }
+  }
+
+  while (remainingDiff !== 0) {
+    let randIdx = availableHoles[Math.floor(Math.random() * availableHoles.length)];
+    if (remainingDiff > 0) {
+      grossScores[randIdx]++;
+      remainingDiff--;
+    } else {
+      if (grossScores[randIdx] > course.par[randIdx] - 1) { // cap min score to birdie
+        grossScores[randIdx]--;
+        remainingDiff++;
+      }
+    }
+  }
+
+  // Calculate Net Scores hole by hole
+  let netScores = grossScores.map((g, idx) => g - strokeHoles[idx]);
+
+  // Build HTML Table Output with Course Header
+  let html = `<div class="course-header">⛳️ ${courseKey} Scorecard</div>
+  <table class="score-table">
+    <tr>
+      <th>Hole</th>${Array.from({length:9},(_,i)=>`<th>${i+1}</th>`).join('')}<th>Out</th>
+      ${Array.from({length:9},(_,i)=>`<th>${i+10}</th>`).join('')}<th>In</th><th>Tot</th>
+    </tr>
+    <tr>
+      <th>Par</th>${course.par.slice(0,9).map(p=>`<td>${p}</td>`).join('')}<th>${course.par.slice(0,9).reduce((a,b)=>a+b)}</th>
+      ${course.par.slice(9,18).map(p=>`<td>${p}</td>`).join('')}<th>${course.par.slice(9,18).reduce((a,b)=>a+b)}</th><th>${totalPar}</th>
+    </tr>
+    <tr>
+      <th>HDCP</th>${course.hc.slice(0,9).map(h=>`<td>${h}</td>`).join('')}<th>-</th>
+      ${course.hc.slice(9,18).map(h=>`<td>${h}</td>`).join('')}<th>-</th><th>-</th>
+    </tr>
+    <tr style="background:#1c2541;">
+      <th style="color:#ffd166">Gross</th>
+      ${grossScores.slice(0,9).map((g,i)=>`<td class="${i+1===activeOutcome.magicHole||i+1===activeOutcome.blowHole?'highlight-hole':''}">${g}${strokeHoles[i]?'<span class="stroke-dot">•</span>':''}</td>`).join('')}
+      <th>${grossScores.slice(0,9).reduce((a,b)=>a+b)}</th>
+      ${grossScores.slice(9,18).map((g,i)=>`<td class="${i+10===activeOutcome.magicHole||i+10===activeOutcome.blowHole?'highlight-hole':''}">${g}${strokeHoles[i+9]?'<span class="stroke-dot">•</span>':''}</td>`).join('')}
+      <th>${grossScores.slice(9,18).reduce((a,b)=>a+b)}</th>
+      <th>${grossScores.reduce((a,b)=>a+b)}</th>
+    </tr>
+    <tr style="background:#0b132b; font-weight:bold;">
+      <th style="color:#6fffe9">Net</th>
+      ${netScores.slice(0,9).map(n=>`<td style="color:#6fffe9">${n}</td>`).join('')}
+      <th style="color:#6fffe9">${netScores.slice(0,9).reduce((a,b)=>a+b)}</th>
+      ${netScores.slice(9,18).map(n=>`<td style="color:#6fffe9">${n}</td>`).join('')}
+      <th style="color:#6fffe9">${netScores.slice(9,18).reduce((a,b)=>a+b)}</th>
+      <th style="color:#ffd166">${netScores.reduce((a,b)=>a+b)}</th>
+    </tr>
+  </table>
+  <div style="font-size:10px; color:#94a3b8; margin-top:6px; text-align:right;">• = 1 Handicap Stroke Received</div>`;
+
+  document.getElementById("cardOutput").innerHTML = html;
+  document.getElementById("cardOutput").style.display = "block";
+}
+</script>
+
+</body>
+</html>
