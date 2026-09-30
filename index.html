@@ -103,12 +103,16 @@
       font-weight: bold;
       border: none;
       cursor: pointer;
-      transition: background 0.2s ease;
+      transition: background 0.2s ease, transform 0.1s ease;
       margin-top: 0.5rem;
     }
 
     button:hover {
       background: #27ae60;
+    }
+
+    button:active {
+      transform: scale(0.98);
     }
 
     .btn-secondary {
@@ -132,6 +136,11 @@
       padding: 0.75rem;
       text-align: center;
       border: 1px solid var(--border-color);
+      transition: border-color 0.3s ease;
+    }
+
+    .spin-box.spinning {
+      border-color: var(--accent-gold);
     }
 
     .spin-label {
@@ -142,9 +151,10 @@
     }
 
     .spin-value {
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       font-weight: bold;
       color: var(--accent-gold);
+      min-height: 1.5rem;
     }
 
     .results-panel {
@@ -248,21 +258,21 @@
     </div>
 
     <div class="spin-grid">
-      <div class="spin-box">
+      <div class="spin-box" id="boxRest">
         <div class="spin-label">Rest</div>
         <div id="valRest" class="spin-value">-</div>
       </div>
-      <div class="spin-box">
+      <div class="spin-box" id="boxVibes">
         <div class="spin-label">Vibes</div>
         <div id="valVibes" class="spin-value">-</div>
       </div>
-      <div class="spin-box">
+      <div class="spin-box" id="boxDrinks">
         <div class="spin-label">Beverages</div>
         <div id="valDrinks" class="spin-value">-</div>
       </div>
     </div>
 
-    <button id="spinBtn" onclick="spinFactors()">🎲 Spin Rex's Factors</button>
+    <button id="spinBtn" onclick="runMultiComponentSpin()">🎲 Spin Rex's Factors</button>
 
     <div id="resultPanel" class="results-panel hidden">
       <div id="persistedNotice" class="persisted-banner hidden">
@@ -271,7 +281,6 @@
       </div>
       <div id="resTier" class="results-tier">Rank #1 — Jackpot</div>
       <div id="resNarrative" class="narrative-text"></div>
-      <div id="resTargetGross" style="font-size:0.85rem; color: var(--accent-green); margin-top: 0.25rem;"></div>
     </div>
   </div>
 
@@ -302,7 +311,6 @@
   </div>
 
   <script>
-    // Course Handicap & Routing Definitions
     const COURSES = {
       hammock: { name: "Hammock Bay", pars: [4,4,3,5,4,4,3,4,5, 4,3,5,4,4,3,4,4,5], hdcps: [7,3,15,1,11,5,17,9,13, 8,16,2,10,6,18,12,4,14] },
       rookery: { name: "The Rookery", pars: [4,5,4,3,4,4,5,3,4, 4,4,3,5,4,3,4,4,5], hdcps: [5,11,1,15,7,3,13,17,9, 6,10,18,2,8,16,12,4,14] },
@@ -311,54 +319,88 @@
       tiburon: { name: "Tiburón Black", pars: [4,4,5,3,4,4,3,5,4, 4,3,5,4,4,3,4,4,5], hdcps: [7,3,1,15,9,5,17,11,13, 8,16,2,10,6,18,12,4,14] }
     };
 
+    const TIERS = [
+      { rank: 1, title: "Rank #1 — Jackpot (Pure Vision)", desc: "Blade putter heating up. Unstoppable tempo." },
+      { rank: 2, title: "Rank #2 — Flawless Rhythm", desc: "Hitting fairways and greens with clinical precision." },
+      { rank: 3, title: "Rank #3 — Solid Contender", desc: "Classic 10-handicap baseline performance." },
+      { rank: 4, title: "Rank #4 — Wildcard Standard", desc: "Streaky stretch of pars interspersed with minor errors." },
+      { rank: 5, title: "Rank #5 — Short Game Rescue", desc: "Driver acting up; scrambling hard around the greens." },
+      { rank: 6, title: "Rank #6 — High Variance Chaos", desc: "Birdies mixed with big numbers. High adrenaline round." },
+      { rank: 7, title: "Rank #7 — Two-Way Miss Takeover", desc: "Unruly off the tee. Major blowup hole danger." }
+    ];
+
     const STORAGE_KEY = 'estero_cup_rex_session';
-
     let currentRexState = null;
+    let isSpinning = false;
 
-    // Check for existing saved session on page load
     window.addEventListener('DOMContentLoaded', () => {
       loadSavedSession();
     });
 
-    function spinFactors() {
-      const rest = Math.floor(Math.random() * 10) + 1;
-      const vibes = Math.floor(Math.random() * 10) + 1;
-      const drinks = Math.floor(Math.random() * 10) + 1;
+    async function runMultiComponentSpin() {
+      if (isSpinning) return;
+      isSpinning = true;
 
-      document.getElementById('valRest').innerText = rest;
-      document.getElementById('valVibes').innerText = vibes;
-      document.getElementById('valDrinks').innerText = drinks;
+      const spinBtn = document.getElementById('spinBtn');
+      spinBtn.disabled = true;
+      spinBtn.innerText = "🌀 Spinning Factors...";
 
-      const totalScore = (rest * 1.2) + (vibes * 1.0) - (drinks * 0.8) + (Math.random() * 4 - 2);
+      document.getElementById('resultPanel').classList.add('hidden');
 
-      let tier, magicHole, blowupHole, desc;
-      if (totalScore > 16) {
-        tier = "Rank #1 — Jackpot (Laser Focus)";
-        magicHole = Math.floor(Math.random() * 18) + 1;
-        blowupHole = null;
-        desc = `Rex is locked in. Blade putter working. Magic moment expected on Hole #${magicHole}.`;
-      } else if (totalScore > 10) {
-        tier = "Rank #3 — Solid Contender";
-        magicHole = Math.floor(Math.random() * 18) + 1;
-        blowupHole = (magicHole % 18) + 1;
-        desc = `Classic 10-handicap round. Magic moment on Hole #${magicHole}, minor blowup on Hole #${blowupHole}.`;
-      } else {
-        tier = "Rank #7 — Two-Way Miss Takeover";
-        magicHole = null;
-        blowupHole = Math.floor(Math.random() * 18) + 1;
-        desc = `Driver is unruly. Heavy reliance on short game. Major blowup risk on Hole #${blowupHole}.`;
-      }
+      const rest = await animateBox('valRest', 'boxRest');
+      const vibes = await animateBox('valVibes', 'boxVibes');
+      const drinks = await animateBox('valDrinks', 'boxDrinks');
+
+      // Formula mapped smoothly across all 7 ranks
+      const rawScore = (rest * 1.5) + (vibes * 1.2) - (drinks * 1.0) + (Math.random() * 4 - 2);
+      
+      // Calculate rank index (0 = Rank #1, 6 = Rank #7)
+      let tierIndex = 6 - Math.min(6, Math.max(0, Math.floor((rawScore + 5) / 4)));
+      const tierObj = TIERS[tierIndex];
+
+      const magicHole = (tierObj.rank <= 4) ? Math.floor(Math.random() * 18) + 1 : null;
+      const blowupHole = (tierObj.rank >= 3) ? Math.floor(Math.random() * 18) + 1 : null;
+
+      let fullDesc = tierObj.desc;
+      if (magicHole) fullDesc += ` Magic moment expected on Hole #${magicHole}.`;
+      if (blowupHole) fullDesc += ` Blowup risk on Hole #${blowupHole}.`;
 
       currentRexState = {
         timestamp: Date.now(),
         courseKey: document.getElementById('courseSelect').value,
         rest, vibes, drinks,
-        tier, magicHole, blowupHole, desc
+        tier: tierObj.title,
+        magicHole, blowupHole,
+        desc: fullDesc
       };
 
-      // Save immediately to localStorage
       saveSession(currentRexState);
       renderRexUI(currentRexState, false);
+
+      spinBtn.disabled = false;
+      spinBtn.innerText = "🎲 Spin Rex's Factors";
+      isSpinning = false;
+    }
+
+    function animateBox(valId, boxId) {
+      return new Promise((resolve) => {
+        const valElem = document.getElementById(valId);
+        const boxElem = document.getElementById(boxId);
+        boxElem.classList.add('spinning');
+
+        let ticks = 0;
+        const interval = setInterval(() => {
+          valElem.innerText = Math.floor(Math.random() * 10) + 1;
+          ticks++;
+          if (ticks > 12) {
+            clearInterval(interval);
+            const finalVal = Math.floor(Math.random() * 10) + 1;
+            valElem.innerText = finalVal;
+            boxElem.classList.remove('spinning');
+            resolve(finalVal);
+          }
+        }, 60);
+      });
     }
 
     function saveSession(state) {
@@ -375,7 +417,6 @@
         if (!raw) return;
 
         const state = JSON.parse(raw);
-        // Expire sessions older than 18 hours
         if (Date.now() - state.timestamp > 18 * 60 * 60 * 1000) {
           clearSavedSession();
           return;
@@ -437,26 +478,22 @@
       const rexCourseHdcp = 10; 
       const targetGross = targetNet + rexCourseHdcp;
 
-      // Build 18-hole score routing
       let grossScores = [...course.pars];
       let currentSum = grossScores.reduce((a, b) => a + b, 0);
       let diff = targetGross - currentSum;
 
-      // Apply Magic Moment (Birdie/Eagle)
       if (currentRexState.magicHole) {
         const idx = currentRexState.magicHole - 1;
         grossScores[idx] -= 1;
         diff += 1;
       }
 
-      // Apply Blowup Hole (Double/Triple)
       if (currentRexState.blowupHole) {
         const idx = currentRexState.blowupHole - 1;
         grossScores[idx] += 2;
         diff -= 2;
       }
 
-      // Distribute remaining strokes across hard handicap holes
       let holeOrder = course.hdcps.map((hdcp, idx) => ({ hdcp, idx })).sort((a, b) => a.hdcp - b.hdcp);
       let ptr = 0;
       while (diff !== 0 && ptr < 100) {
@@ -471,7 +508,6 @@
         ptr++;
       }
 
-      // Render Table
       renderTableUI(course, grossScores, rexCourseHdcp, currentRexState);
     }
 
