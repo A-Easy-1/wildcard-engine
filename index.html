@@ -123,6 +123,19 @@
       padding: 0.5rem;
     }
 
+    .btn-spin {
+      background: #2c3e50;
+      color: var(--accent-gold);
+      font-size: 0.8rem;
+      padding: 0.4rem 0.6rem;
+      margin-top: 0.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-spin:hover {
+      background: #34495e;
+    }
+
     .spin-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -136,11 +149,9 @@
       padding: 0.75rem;
       text-align: center;
       border: 1px solid var(--border-color);
-      transition: border-color 0.3s ease;
-    }
-
-    .spin-box.spinning {
-      border-color: var(--accent-gold);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .spin-label {
@@ -151,10 +162,13 @@
     }
 
     .spin-value {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       font-weight: bold;
       color: var(--accent-gold);
-      min-height: 1.5rem;
+      min-height: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .results-panel {
@@ -243,12 +257,12 @@
   <div class="card">
     <h2>
       1. Pre-Round Factors
-      <span id="spinStatus" class="status-badge">Ready to Spin</span>
+      <span id="spinStatus" class="status-badge">Spin All 3 Factors</span>
     </h2>
 
     <div class="form-group">
       <label for="courseSelect">Select Course layout:</label>
-      <select id="courseSelect">
+      <select id="courseSelect" onchange="updateCourseSelection()">
         <option value="hammock">Hammock Bay (HC Limit: 10)</option>
         <option value="rookery">The Rookery (HC Limit: 10)</option>
         <option value="thepark">The Park (HC Limit: 10)</option>
@@ -257,30 +271,35 @@
       </select>
     </div>
 
+    <!-- 3 SEPARATE SPIN BUTTON COMPONENT GRID -->
     <div class="spin-grid">
-      <div class="spin-box" id="boxRest">
+      <div class="spin-box">
         <div class="spin-label">Rest</div>
         <div id="valRest" class="spin-value">-</div>
+        <button id="btnRest" class="btn-spin" onclick="spinIndividual('rest')">🎲 Spin</button>
       </div>
-      <div class="spin-box" id="boxVibes">
+      <div class="spin-box">
         <div class="spin-label">Vibes</div>
         <div id="valVibes" class="spin-value">-</div>
+        <button id="btnVibes" class="btn-spin" onclick="spinIndividual('vibes')">🎲 Spin</button>
       </div>
-      <div class="spin-box" id="boxDrinks">
+      <div class="spin-box">
         <div class="spin-label">Beverages</div>
         <div id="valDrinks" class="spin-value">-</div>
+        <button id="btnDrinks" class="btn-spin" onclick="spinIndividual('drinks')">🎲 Spin</button>
       </div>
     </div>
 
-    <button id="spinBtn" onclick="runMultiComponentSpin()">🎲 Spin Rex's Factors</button>
+    <button id="calcBtn" onclick="evaluateRexPerformance()" disabled style="opacity: 0.5; cursor: not-allowed;">⚡️ Calculate Rex's Outlook</button>
 
     <div id="resultPanel" class="results-panel hidden">
       <div id="persistedNotice" class="persisted-banner hidden">
         <span>⚡️ Active Session Restored</span>
         <button class="btn-secondary" style="width: auto; padding: 2px 6px;" onclick="clearSavedSession()">Reset</button>
       </div>
-      <div id="resTier" class="results-tier">Rank #1 — Jackpot</div>
+      <div id="resTier" class="results-tier"></div>
       <div id="resNarrative" class="narrative-text"></div>
+      <div id="resTargetGross" style="font-size:0.85rem; color: var(--accent-green); margin-top: 0.25rem;"></div>
     </div>
   </div>
 
@@ -319,88 +338,98 @@
       tiburon: { name: "Tiburón Black", pars: [4,4,5,3,4,4,3,5,4, 4,3,5,4,4,3,4,4,5], hdcps: [7,3,1,15,9,5,17,11,13, 8,16,2,10,6,18,12,4,14] }
     };
 
-    const TIERS = [
-      { rank: 1, title: "Rank #1 — Jackpot (Pure Vision)", desc: "Blade putter heating up. Unstoppable tempo." },
-      { rank: 2, title: "Rank #2 — Flawless Rhythm", desc: "Hitting fairways and greens with clinical precision." },
-      { rank: 3, title: "Rank #3 — Solid Contender", desc: "Classic 10-handicap baseline performance." },
-      { rank: 4, title: "Rank #4 — Wildcard Standard", desc: "Streaky stretch of pars interspersed with minor errors." },
-      { rank: 5, title: "Rank #5 — Short Game Rescue", desc: "Driver acting up; scrambling hard around the greens." },
-      { rank: 6, title: "Rank #6 — High Variance Chaos", desc: "Birdies mixed with big numbers. High adrenaline round." },
-      { rank: 7, title: "Rank #7 — Two-Way Miss Takeover", desc: "Unruly off the tee. Major blowup hole danger." }
+    const ALL_TIERS = [
+      { rank: 1, title: "Rank #1 — Jackpot (Pure Vision)", desc: "Rex is locked in. Blade putter working with lethal precision." },
+      { rank: 2, title: "Rank #2 — Flawless Tempo", desc: "Solid ball striking, driving lines are clean and controlled." },
+      { rank: 3, title: "Rank #3 — Solid Contender", desc: "Classic 10-handicap performance baseline with steady scoring." },
+      { rank: 4, title: "Rank #4 — Wildcard Baseline", desc: "Inconsistent tee shots balanced out by clutch scrambling." },
+      { rank: 5, title: "Rank #5 — Short Game Scramble", desc: "Driver acting up; relies heavily on wedges and putter to save par." },
+      { rank: 6, title: "Rank #6 — High Variance Chaos", desc: "A wild ride of birdies mixed with double bogeys." },
+      { rank: 7, title: "Rank #7 — Two-Way Miss Takeover", desc: "Driver is unruly. Heavy reliance on short game to survive." }
     ];
 
     const STORAGE_KEY = 'estero_cup_rex_session';
+
+    let factorValues = {
+      rest: null,
+      vibes: null,
+      drinks: null
+    };
+
     let currentRexState = null;
-    let isSpinning = false;
 
     window.addEventListener('DOMContentLoaded', () => {
       loadSavedSession();
     });
 
-    async function runMultiComponentSpin() {
-      if (isSpinning) return;
-      isSpinning = true;
+    function spinIndividual(type) {
+      const valElem = document.getElementById(type === 'rest' ? 'valRest' : type === 'vibes' ? 'valVibes' : 'valDrinks');
+      
+      let ticks = 0;
+      const interval = setInterval(() => {
+        valElem.innerText = Math.floor(Math.random() * 10) + 1;
+        ticks++;
+        if (ticks > 10) {
+          clearInterval(interval);
+          const finalVal = Math.floor(Math.random() * 10) + 1;
+          valElem.innerText = finalVal;
+          factorValues[type] = finalVal;
+          checkAllSpun();
+        }
+      }, 50);
+    }
 
-      const spinBtn = document.getElementById('spinBtn');
-      spinBtn.disabled = true;
-      spinBtn.innerText = "🌀 Spinning Factors...";
+    function checkAllSpun() {
+      const calcBtn = document.getElementById('calcBtn');
+      const statusBadge = document.getElementById('spinStatus');
 
-      document.getElementById('resultPanel').classList.add('hidden');
+      if (factorValues.rest !== null && factorValues.vibes !== null && factorValues.drinks !== null) {
+        calcBtn.disabled = false;
+        calcBtn.style.opacity = '1';
+        calcBtn.style.cursor = 'pointer';
+        statusBadge.innerText = 'Ready to Calculate';
+        statusBadge.style.color = 'var(--accent-gold)';
+      } else {
+        const remaining = 3 - [factorValues.rest, factorValues.vibes, factorValues.drinks].filter(v => v !== null).length;
+        statusBadge.innerText = `Spin ${remaining} More`;
+      }
+    }
 
-      const rest = await animateBox('valRest', 'boxRest');
-      const vibes = await animateBox('valVibes', 'boxVibes');
-      const drinks = await animateBox('valDrinks', 'boxDrinks');
-
-      // Formula mapped smoothly across all 7 ranks
+    function evaluateRexPerformance() {
+      const { rest, vibes, drinks } = factorValues;
+      
+      // Scaled formula covering all 7 ranks evenly
       const rawScore = (rest * 1.5) + (vibes * 1.2) - (drinks * 1.0) + (Math.random() * 4 - 2);
       
-      // Calculate rank index (0 = Rank #1, 6 = Rank #7)
+      // Index mapped 0 (Rank 1) to 6 (Rank 7)
       let tierIndex = 6 - Math.min(6, Math.max(0, Math.floor((rawScore + 5) / 4)));
-      const tierObj = TIERS[tierIndex];
+      const selectedTier = ALL_TIERS[tierIndex];
 
-      const magicHole = (tierObj.rank <= 4) ? Math.floor(Math.random() * 18) + 1 : null;
-      const blowupHole = (tierObj.rank >= 3) ? Math.floor(Math.random() * 18) + 1 : null;
+      const magicHole = (selectedTier.rank <= 4) ? Math.floor(Math.random() * 18) + 1 : null;
+      const blowupHole = (selectedTier.rank >= 3) ? Math.floor(Math.random() * 18) + 1 : null;
 
-      let fullDesc = tierObj.desc;
-      if (magicHole) fullDesc += ` Magic moment expected on Hole #${magicHole}.`;
-      if (blowupHole) fullDesc += ` Blowup risk on Hole #${blowupHole}.`;
+      let narrative = selectedTier.desc;
+      if (magicHole) narrative += ` Magic moment expected on Hole #${magicHole}.`;
+      if (blowupHole) narrative += ` Blowup risk on Hole #${blowupHole}.`;
 
       currentRexState = {
         timestamp: Date.now(),
         courseKey: document.getElementById('courseSelect').value,
         rest, vibes, drinks,
-        tier: tierObj.title,
+        tier: selectedTier.title,
         magicHole, blowupHole,
-        desc: fullDesc
+        desc: narrative
       };
 
       saveSession(currentRexState);
       renderRexUI(currentRexState, false);
-
-      spinBtn.disabled = false;
-      spinBtn.innerText = "🎲 Spin Rex's Factors";
-      isSpinning = false;
     }
 
-    function animateBox(valId, boxId) {
-      return new Promise((resolve) => {
-        const valElem = document.getElementById(valId);
-        const boxElem = document.getElementById(boxId);
-        boxElem.classList.add('spinning');
-
-        let ticks = 0;
-        const interval = setInterval(() => {
-          valElem.innerText = Math.floor(Math.random() * 10) + 1;
-          ticks++;
-          if (ticks > 12) {
-            clearInterval(interval);
-            const finalVal = Math.floor(Math.random() * 10) + 1;
-            valElem.innerText = finalVal;
-            boxElem.classList.remove('spinning');
-            resolve(finalVal);
-          }
-        }, 60);
-      });
+    function updateCourseSelection() {
+      if (currentRexState) {
+        currentRexState.courseKey = document.getElementById('courseSelect').value;
+        saveSession(currentRexState);
+      }
     }
 
     function saveSession(state) {
@@ -423,11 +452,14 @@
         }
 
         currentRexState = state;
+        factorValues = { rest: state.rest, vibes: state.vibes, drinks: state.drinks };
+
         document.getElementById('courseSelect').value = state.courseKey;
         document.getElementById('valRest').innerText = state.rest;
         document.getElementById('valVibes').innerText = state.vibes;
         document.getElementById('valDrinks').innerText = state.drinks;
 
+        checkAllSpun();
         renderRexUI(state, true);
       } catch (e) {
         console.error("Failed to load session:", e);
@@ -437,13 +469,22 @@
     function clearSavedSession() {
       localStorage.removeItem(STORAGE_KEY);
       currentRexState = null;
+      factorValues = { rest: null, vibes: null, drinks: null };
+
       document.getElementById('valRest').innerText = '-';
       document.getElementById('valVibes').innerText = '-';
       document.getElementById('valDrinks').innerText = '-';
       document.getElementById('resultPanel').classList.add('hidden');
       document.getElementById('scorecardOutput').classList.add('hidden');
-      document.getElementById('spinStatus').innerText = 'Ready to Spin';
-      document.getElementById('spinStatus').style.color = 'var(--accent-green)';
+      
+      const calcBtn = document.getElementById('calcBtn');
+      calcBtn.disabled = true;
+      calcBtn.style.opacity = '0.5';
+      calcBtn.style.cursor = 'not-allowed';
+
+      const statusBadge = document.getElementById('spinStatus');
+      statusBadge.innerText = 'Spin All 3 Factors';
+      statusBadge.style.color = 'var(--accent-green)';
     }
 
     function renderRexUI(state, isRestored) {
@@ -464,7 +505,7 @@
 
     function generateScorecard() {
       if (!currentRexState) {
-        alert("Please spin Rex's factors first!");
+        alert("Please calculate Rex's outlook first!");
         return;
       }
 
